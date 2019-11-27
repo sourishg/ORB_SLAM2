@@ -22,6 +22,9 @@
 #ifndef SYSTEM_H
 #define SYSTEM_H
 
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include<string>
 #include<thread>
 #include<opencv2/core/core.hpp>
@@ -64,7 +67,7 @@ public:
     // Proccess the given stereo frame. Images must be synchronized and rectified.
     // Input images: RGB (CV_8UC3) or grayscale (CV_8U). RGB is converted to grayscale.
     // Returns the camera pose (empty if tracking fails).
-    cv::Mat TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timestamp);
+    cv::Mat TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const cv::Mat &segLeft, const cv::Mat &segRight, const double &timestamp);
 
     // Process the given rgbd frame. Depthmap must be registered to the RGB frame.
     // Input image: RGB (CV_8UC3) or grayscale (CV_8U). RGB is converted to grayscale.

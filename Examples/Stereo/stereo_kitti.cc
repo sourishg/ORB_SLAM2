@@ -32,7 +32,8 @@
 using namespace std;
 
 void LoadImages(const string &strPathToSequence, vector<string> &vstrImageLeft,
-                vector<string> &vstrImageRight, vector<double> &vTimestamps);
+                vector<string> &vstrImageRight, vector<string> &vstrSegLeft,
+                vector<string> &vstrSegRight, vector<double> &vTimestamps);
 
 int main(int argc, char **argv)
 {
@@ -45,8 +46,10 @@ int main(int argc, char **argv)
     // Retrieve paths to images
     vector<string> vstrImageLeft;
     vector<string> vstrImageRight;
+    vector<string> vstrSegRight;
+    vector<string> vstrSegLeft;
     vector<double> vTimestamps;
-    LoadImages(string(argv[3]), vstrImageLeft, vstrImageRight, vTimestamps);
+    LoadImages(string(argv[3]), vstrImageLeft, vstrImageRight, vstrSegLeft, vstrSegRight, vTimestamps);
 
     const int nImages = vstrImageLeft.size();
 
@@ -62,12 +65,14 @@ int main(int argc, char **argv)
     cout << "Images in the sequence: " << nImages << endl << endl;   
 
     // Main loop
-    cv::Mat imLeft, imRight;
+    cv::Mat imLeft, imRight, segLeft, segRight;
     for(int ni=0; ni<nImages; ni++)
     {
         // Read left and right images from file
         imLeft = cv::imread(vstrImageLeft[ni],CV_LOAD_IMAGE_UNCHANGED);
         imRight = cv::imread(vstrImageRight[ni],CV_LOAD_IMAGE_UNCHANGED);
+        segLeft = cv::imread(vstrSegLeft[ni],CV_LOAD_IMAGE_UNCHANGED);
+        segRight = cv::imread(vstrSegRight[ni],CV_LOAD_IMAGE_UNCHANGED);
         double tframe = vTimestamps[ni];
 
         if(imLeft.empty())
@@ -84,7 +89,7 @@ int main(int argc, char **argv)
 #endif
 
         // Pass the images to the SLAM system
-        SLAM.TrackStereo(imLeft,imRight,tframe);
+        SLAM.TrackStereo(imLeft,imRight,segLeft,segRight,tframe);
 
 #ifdef COMPILEDWITHC11
         std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
@@ -128,7 +133,8 @@ int main(int argc, char **argv)
 }
 
 void LoadImages(const string &strPathToSequence, vector<string> &vstrImageLeft,
-                vector<string> &vstrImageRight, vector<double> &vTimestamps)
+                vector<string> &vstrImageRight, vector<string> &vstrSegLeft,
+                vector<string> &vstrSegRight, vector<double> &vTimestamps)
 {
     ifstream fTimes;
     string strPathTimeFile = strPathToSequence + "/times.txt";
@@ -150,9 +156,14 @@ void LoadImages(const string &strPathToSequence, vector<string> &vstrImageLeft,
     string strPrefixLeft = strPathToSequence + "/image_0/";
     string strPrefixRight = strPathToSequence + "/image_1/";
 
+    string strPrefixSegLeft = strPathToSequence + "/seg_0/";
+    string strPrefixSegRight = strPathToSequence + "/seg_1/";
+
     const int nTimes = vTimestamps.size();
     vstrImageLeft.resize(nTimes);
     vstrImageRight.resize(nTimes);
+    vstrSegLeft.resize(nTimes);
+    vstrSegRight.resize(nTimes);
 
     for(int i=0; i<nTimes; i++)
     {
@@ -160,5 +171,7 @@ void LoadImages(const string &strPathToSequence, vector<string> &vstrImageLeft,
         ss << setfill('0') << setw(6) << i;
         vstrImageLeft[i] = strPrefixLeft + ss.str() + ".png";
         vstrImageRight[i] = strPrefixRight + ss.str() + ".png";
+        vstrSegLeft[i] = strPrefixSegLeft + ss.str() + ".png";
+        vstrSegRight[i] = strPrefixSegRight + ss.str() + ".png";
     }
 }
